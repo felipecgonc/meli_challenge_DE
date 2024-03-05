@@ -1,4 +1,4 @@
--- Desafio 1
+-- Challenge 1
 
 SELECT o.seller_id,
        c.nombre,
@@ -13,7 +13,7 @@ GROUP BY o.seller_id,
          c.email
 HAVING COUNT(o.id) > 1500;
 
--- Desafio 2
+-- Challenge 2
 
 WITH sales_data AS (
     SELECT 
@@ -47,7 +47,7 @@ FROM sales_data
 WHERE seller_rank <= 5
 ORDER BY month, seller_rank;
 
--- Desafio 3
+-- Challenge 3
 
 CREATE TABLE HisotricalItemSnapshot (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,14 +56,14 @@ CREATE TABLE HisotricalItemSnapshot (
     snapshot_date DATE NOT NULL
 );
 
--- Procedure para (Re)Processar um só dia
+-- Procedure to reprocess a single, specific date
 
 CREATE PROCEDURE PopulateHistoricalItemSnapshot(IN var_date DATE)
 BEGIN
     DELETE FROM HistoricalItemSnapshot WHERE snapshot_date = var_date;
 
-    -- Primeiro, vamos ordenar os registros da tabela histórica
-    -- referentes ao dia que se quer reprocessar
+    -- First, we'll order rows from the history table related to the
+    -- day we want to reprocess
     WITH ordered AS (
         SELECT
             id,
@@ -75,8 +75,8 @@ BEGIN
         WHERE DATE(updated_at) = var_date
     ),
     latest_data AS (
-        -- Selecionamos então, o snapshot mais recente. Importante notar que esse primeiro
-        -- SELECT buscará apenas registros que foram atualizados na data especificada.
+        -- We'll then select the latest snapshot. It's important to note that this SELECT
+        -- statement will only retrieve rows updated during the specified date.
         SELECT 
             id,
             price,
@@ -87,8 +87,8 @@ BEGIN
 
         UNION ALL
 
-        -- No segundo SELECT, buscamos o snapshot mais recente dos registros cuja última
-        -- atualização é anterior à data especificada.
+        -- In this second SELECT statement, we'll retrieve the latest snapshot of the rows which
+        -- were last updated before the specified date
         SELECT
             id,
             price,
@@ -99,7 +99,7 @@ BEGIN
         AND DATE(updated_at) < var_date;
     )
 
-    -- Por fim, fazemos o MERGE na tabela
+    -- Finally, we'll MERGE the data into the table
     MERGE INTO HistoricalItemSnapshot (id, price, status, snapshot_date) AS HIS
     USING latest_data AS SRC
     ON HIS.id = SRC.id
@@ -108,9 +108,17 @@ BEGIN
         VALUES (SRC.id, SRC.price, SRC.status, SRC.snapshot_date)
 END;
 
+-- Standalone call
 CALL PopulateHistoricalItemSnapshot('2024-03-03');
 
--- Reprocessamento histórico da tabela
+-- Or schedule
+CREATE EVENT daily_snapshot
+ON SCHEDULE EVERY 1 DAY
+STARTS DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+DO
+  CALL PopulateHistoricalItemSnapshot(DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY));
+
+-- Full query for reprocessing the whole dataset
 
 DELETE FROM HistoricalItemSnapshot WHERE 1=1;
 
