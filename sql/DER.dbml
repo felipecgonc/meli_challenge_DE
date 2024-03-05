@@ -1,0 +1,77 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+enum customer_type {
+  "Buyer"
+  "Seller"
+}
+
+Table Customer {
+  id integer [primary key]
+  type customer_type
+  email varchar
+  name varchar
+  last_name timestamp 
+  gender varchar
+  address varchar
+  birth_date timestamp
+  phone varchar
+  status varchar
+  buyer_active bool
+  seller_active bool
+}
+
+Table Category {
+  id integer [primary key]
+  name varchar
+  description varchar
+  path varchar
+}
+
+Table Item {
+  id integer [primary key]
+  category_id integer
+  name varchar
+  description varchar
+  price timestamp
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table ItemHistory {
+  id integer [primary key]
+  category_id integer
+  name varchar
+  description varchar
+  price timestamp
+  status varchar
+  updated_at timestamp
+}
+
+Table Order {
+  id integer [primary key]
+  item_id varchar
+  seller_id integer
+  buyer_id integer
+  quantity integer
+  value float
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table OrderHistory {
+  id integer [primary key]
+  item_id varchar
+  quantity integer
+  value float
+  status varchar
+  updated_at timestamp
+}
+
+Ref: Order.seller_id > Customer.id
+Ref: Order.buyer_id > Customer.id
+Ref: Order.item_id > Item.id
+Ref: Item.category_id > Category.id
+Ref: Order.id > OrderHistory.id
+Ref: Item.id > ItemHistory.id
