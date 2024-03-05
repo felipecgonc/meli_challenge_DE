@@ -102,7 +102,7 @@ BEGIN
     -- Finally, we'll MERGE the data into the table
     MERGE INTO HistoricalItemSnapshot (id, price, status, snapshot_date) AS HIS
     USING latest_data AS SRC
-    ON HIS.id = SRC.id
+    ON (HIS.id = SRC.id AND HIS.snapshot_date = SRC.snapshot_date)
     WHEN NOT MATCHED THEN
         INSERT (id, price, status, snapshot_date)
         VALUES (SRC.id, SRC.price, SRC.status, SRC.snapshot_date)
